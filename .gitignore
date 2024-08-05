@@ -9,3 +9,6 @@ coverage
 
 # misc
 .DS_Store
+
+# packed
+next-yandex-metrica-*.tgz

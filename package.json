@@ -21,6 +21,7 @@
   "scripts": {
     "build": "del-cli dist && tsc",
     "prepublishOnly": "pnpm build",
+    "pack": "npm pack .",
     "lint": "eslint src --fix --max-warnings 0",
     "lint:ts": "tsc --noEmit",
     "test": "jest",
