@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { ym } from '../lib/ym';
 
-export const useTrackRouteChange = ({ tagID }: { tagID: number | null }) => {
+export const useTrackRouteChange = ({ tagID }: { tagID: number|number[]| null }) => {
   useEffect(() => {
     const handleRouteChange = (url: URL): void => {
       ym(tagID, 'hit', url.toString());

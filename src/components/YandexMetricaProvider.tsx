@@ -5,17 +5,15 @@ import { useTrackRouteChange } from '../hooks/useTrackRouteChange';
 import { InitParameters } from '../lib/types/parameters';
 import { MetricaPixel } from './MetricaPixel';
 
-export const MetricaTagIDContext = createContext<number | null>(null);
+export const MetricaTagIDContext = createContext<number|number[]|null>(null);
 
-interface Props {
+export const YandexMetricaProvider: FC<{
   children: ReactNode;
   tagID?: number;
   strategy?: ScriptProps['strategy'];
   initParameters?: InitParameters;
   shouldUseAlternativeCDN?: boolean;
-}
-
-export const YandexMetricaProvider: FC<Props> = ({
+}> = ({
   children,
   tagID,
   strategy = 'afterInteractive',
@@ -55,6 +53,48 @@ export const YandexMetricaProvider: FC<Props> = ({
         <MetricaPixel tagID={id} />
       </noscript>
       <MetricaTagIDContext.Provider value={id}>{children}</MetricaTagIDContext.Provider>
+    </>
+  );
+};
+
+export const YandexMetricaMultiProvider: FC<{
+  children: ReactNode;
+  strategy?: ScriptProps['strategy'];
+  shouldUseAlternativeCDN?: boolean;
+  counters: {
+    tagID: number;
+    initParameters?: InitParameters;
+  }[]
+}> = ({
+  children,
+  strategy = 'afterInteractive',
+  shouldUseAlternativeCDN = false,
+  counters
+}) => {
+
+  const ids = counters.map(x => x.tagID)
+  useTrackRouteChange({ tagID: ids });
+
+  const scriptSrc = shouldUseAlternativeCDN
+    ? 'https://cdn.jsdelivr.net/npm/yandex-metrica-watch/tag.js'
+    : 'https://mc.yandex.ru/metrika/tag.js';
+
+  return (
+    <>
+      <Script id="yandex-metrica" strategy={strategy}>
+        {`
+          (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+          (window, document, "script", "${scriptSrc}", "ym");
+          ${counters.map((x) => `ym(${x.tagID}, "init", ${JSON.stringify(x.initParameters ?? {})});`)}
+        `}
+      </Script>
+      <noscript id="yandex-metrica-pixel">
+        {ids.map(id => <MetricaPixel key={id} tagID={id} />)}
+      </noscript>
+      <MetricaTagIDContext.Provider value={ids}>{children}</MetricaTagIDContext.Provider>
     </>
   );
 };
